@@ -33,7 +33,6 @@ export function main(dtoIn) {
     "Nikola", "Kateřina", "Lenka", "Zuzana", "Anna"
   ];
 
-  // List of male surnames
   const surnamesMale = [
     "Novák", "Svoboda", "Doležal", "Krejčí", "Konečný",
     "Hájek", "Urban", "Bláha", "Vlk", "Krupa",
@@ -41,7 +40,6 @@ export function main(dtoIn) {
     "Kolář", "Strnad", "Veverka", "Mazal", "Jílek"
   ];
 
-  // List of female surnames
   const surnamesFemale = [
     "Malá", "Veselá", "Krátká", "Suchá", "Štěpánová",
     "Bílá", "Jírova", "Tichá", "Vlková", "Hrubá",
@@ -54,9 +52,11 @@ export function main(dtoIn) {
   // Sequence: create empty result array
   const dtoOut = [];
 
+  // Sequence: set to remember which birthdates we already used
+  const usedBirthdates = new Set();
+
   // Iteration: repeat for each employee we want to generate
   for (let employeeIndex = 0; employeeIndex < count; employeeIndex++) {
-
     // Branching: choose random gender (full if/else version)
     let gender;
     if (Math.random() < 0.5) {
@@ -76,8 +76,14 @@ export function main(dtoIn) {
       surname = randomItem(surnamesFemale);
     }
 
-    // Sequence: generate birthdate and workload
-    const birthdate = randomBirthdate(minAge, maxAge);
+    // Sequence + iteration: generate unique birthdate in correct age interval
+    let birthdate;
+    do {
+      birthdate = randomBirthdate(minAge, maxAge);
+    } while (usedBirthdates.has(birthdate));
+    usedBirthdates.add(birthdate);
+
+    // Sequence: generate workload
     const workload = randomItem(workloads);
 
     // Sequence: create one employee object
@@ -118,22 +124,32 @@ function randomItem(array) {
  * Helper function.
  * Generates random birthdate so that age is between ageMin and ageMax.
  * Result is ISO Date-Time string.
+ *
+ * Age interval is respected more precisely:
+ * we choose a random moment between
+ * (now - ageMax years) and (now - ageMin years).
  */
 function randomBirthdate(ageMin, ageMax) {
-  // Sequence: get current year
   const now = new Date();
-  const currentYear = now.getFullYear();
 
-  // Sequence: compute allowed year range for birthdate
-  const minYear = currentYear - ageMax; // oldest allowed year
-  const maxYear = currentYear - ageMin; // youngest allowed year
+  // Oldest allowed birthdate = now - ageMax years
+  const minDate = new Date(now);
+  minDate.setFullYear(minDate.getFullYear() - ageMax);
 
-  // Sequence: choose random year, month and day
-  const year = randomInt(minYear, maxYear);
-  const month = randomInt(0, 11);
-  const day = randomInt(1, 28);
+  // Youngest allowed birthdate = now - ageMin years
+  const maxDate = new Date(now);
+  maxDate.setFullYear(maxDate.getFullYear() - ageMin);
 
-  // Sequence: create Date object and convert to ISO string
-  const date = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
+  // Get numeric timestamps
+  const minTime = minDate.getTime();
+  const maxTime = maxDate.getTime();
+
+  // Pick random time between minTime and maxTime
+  const randomTime = randomInt(minTime, maxTime);
+
+  const date = new Date(randomTime);
   return date.toISOString();
 }
+
+
+
