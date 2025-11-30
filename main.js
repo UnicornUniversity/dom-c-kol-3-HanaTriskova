@@ -137,5 +137,3 @@ function randomBirthdate(ageMin, ageMax) {
   const date = new Date(Date.UTC(year, month, day, 0, 0, 0, 0));
   return date.toISOString();
 }
-
-
